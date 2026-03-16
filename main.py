@@ -1,4 +1,5 @@
 import logging
+import os
 import socket
 import uvicorn
 
@@ -10,6 +11,7 @@ logging.basicConfig(
     level=logging.INFO
 )
 _logger = logging.getLogger(__name__)
+RUNTIME_PORT_FILE = "/tmp/chatgpt-tarot-divination.port"
 
 _logger.info(f"settings: {settings.model_dump_json(indent=2)}")
 
@@ -34,4 +36,8 @@ if __name__ == "__main__":
             preferred_port,
             bind_port
         )
+    os.environ["CHATGPT_TAROT_RUNTIME_PORT"] = str(bind_port)
+    with open(RUNTIME_PORT_FILE, "w", encoding="utf-8") as f:
+        f.write(str(bind_port))
+    _logger.info("Runtime port: %s", bind_port)
     uvicorn.run(app, host=bind_host, port=bind_port)

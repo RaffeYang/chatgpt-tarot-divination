@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from src.limiter import get_real_ipaddr
 from src.chatgpt_router import router as chatgpt_router
 from src.user_router import router as user_router
+from src.config import settings
 
 
 _logger = logging.getLogger(__name__)
@@ -44,6 +45,16 @@ if os.path.exists("dist"):
 @app.get("/health")
 async def health():
     return "ok"
+
+
+@app.get("/api/v1/runtime")
+async def runtime_status():
+    runtime_port = os.getenv("CHATGPT_TAROT_RUNTIME_PORT", str(settings.port))
+    return {
+        "status": "ok",
+        "host": settings.host,
+        "port": int(runtime_port),
+    }
 
 if os.path.exists("dist"):
     app.mount("/", StaticFiles(directory="dist"), name="static")

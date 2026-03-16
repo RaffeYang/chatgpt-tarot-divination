@@ -17,6 +17,7 @@ from src.models import DivinationBody, User
 from src.user import get_user
 from src.limiter import get_real_ipaddr, check_rate_limit
 from src.divination import DivinationFactory
+from src.divination.report_validator import find_missing_tarot_sections
 
 
 def _normalize_openai_base_url(base_url: str) -> str:
@@ -34,6 +35,22 @@ def _normalize_openai_base_url(base_url: str) -> str:
 
 def _is_anthropic_base_url(base_url: str) -> bool:
     return "/anthropic" in (base_url or "").lower()
+
+
+def _resolve_provider(explicit_protocol: Optional[str], base_url: str, model: str) -> str:
+    protocol = (explicit_protocol or "").strip().lower()
+    if protocol in {"anthropic", "openai"}:
+        return protocol
+
+    normalized_base_url = (base_url or "").lower()
+    normalized_model = (model or "").lower()
+    if "/anthropic" in normalized_base_url or "anthropic" in normalized_base_url:
+        return "anthropic"
+    if "minimaxi.com" in normalized_base_url and normalized_model.startswith("minimax-"):
+        return "anthropic"
+    if normalized_model.startswith("claude-"):
+        return "anthropic"
+    return "openai"
 
 
 openai_client = AsyncOpenAI(
@@ -106,6 +123,7 @@ async def divination(
     custom_base_url = request.headers.get("x-api-url")
     custom_api_key = request.headers.get("x-api-key")
     custom_api_model = request.headers.get("x-api-model")
+    custom_api_protocol = request.headers.get("x-api-protocol")
     api_model = custom_api_model if custom_api_model else settings.model
     effective_base_url = (custom_base_url or settings.api_base or "").strip().rstrip("/")
     effective_api_key = custom_api_key or settings.api_key
@@ -116,8 +134,10 @@ async def divination(
             detail="请设置 API KEY 和 API BASE URL"
         )
 
+    provider = _resolve_provider(custom_api_protocol, effective_base_url, api_model)
+
     try:
-        if _is_anthropic_base_url(effective_base_url):
+        if provider == "anthropic":
             api_client = (
                 anthropic_client
                 if not custom_api_key and not custom_base_url
@@ -134,7 +154,6 @@ async def divination(
                     "content": [{"type": "text", "text": prompt}]
                 }]
             )
-            provider = "anthropic"
         else:
             normalized_effective_base_url = _normalize_openai_base_url(effective_base_url)
             api_client = (
@@ -156,15 +175,43 @@ async def divination(
                     {"role": "user", "content": prompt}
                 ]
             )
-            provider = "openai"
     except Exception as e:
-        _logger.error(f"LLM API error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"LLM API error: {str(e)}"
+        # Fallback: some Anthropic-compatible gateways may not expose /anthropic in URL.
+        should_fallback_to_anthropic = (
+            provider == "openai"
+            and "minimaxi" in effective_base_url.lower()
+            and getattr(e, "status_code", None) in {400, 404, 415}
         )
+        if should_fallback_to_anthropic:
+            try:
+                fallback_client = AsyncAnthropic(api_key=effective_api_key, base_url=effective_base_url)
+                llm_stream = await fallback_client.messages.create(
+                    model=api_model,
+                    max_tokens=1400,
+                    temperature=0.6,
+                    system=system_prompt,
+                    stream=True,
+                    messages=[{
+                        "role": "user",
+                        "content": [{"type": "text", "text": prompt}]
+                    }]
+                )
+                provider = "anthropic"
+            except Exception as fallback_error:
+                _logger.error(f"LLM API error: {fallback_error}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"LLM API error: {str(fallback_error)}"
+                ) from fallback_error
+        else:
+            _logger.error(f"LLM API error: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"LLM API error: {str(e)}"
+            ) from e
 
     async def get_stream_generator():
+        full_text = ""
         try:
             if provider == "anthropic":
                 async for event in llm_stream:
@@ -174,12 +221,23 @@ async def divination(
                     ):
                         current_response = event.delta.text
                         if current_response:
+                            full_text += current_response
                             yield f"data: {json.dumps(current_response)}\n\n"
             else:
                 async for event in llm_stream:
                     if event.choices and event.choices[0].delta and event.choices[0].delta.content:
                         current_response = event.choices[0].delta.content
+                        full_text += current_response
                         yield f"data: {json.dumps(current_response)}\n\n"
+            if divination_body.prompt_type == "tarot":
+                missing_sections = find_missing_tarot_sections(full_text)
+                if missing_sections:
+                    warning = (
+                        "\n\n---\n⚠️ 结构化校验提醒：本次结果缺少以下章节："
+                        + "、".join(missing_sections)
+                        + "。建议补充后再决策。"
+                    )
+                    yield f"data: {json.dumps(warning)}\n\n"
         except Exception as e:
             _logger.error(f"Streaming error: {e}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"

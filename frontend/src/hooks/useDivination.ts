@@ -4,6 +4,7 @@ import MarkdownIt from 'markdown-it'
 import { useGlobalState } from '@/store'
 import { saveHistory } from '@/utils/divinationHistory'
 import { getDivinationOption } from '@/config/constants'
+import { findMissingTarotSections } from '@/utils/tarotReportValidator'
 
 const API_BASE = import.meta.env.VITE_API_BASE || ''
 const IS_TAURI = import.meta.env.VITE_IS_TAURI || ''
@@ -51,7 +52,8 @@ export function useDivination(promptType: string) {
         }),
         headers,
         async onopen(response) {
-          if (response.ok && response.headers.get('content-type') === EventStreamContentType) {
+          const contentType = (response.headers.get('content-type') || '').toLowerCase()
+          if (response.ok && contentType.includes(EventStreamContentType)) {
             setStreaming(true)
             return
           } else if (response.status >= 400) {
@@ -94,6 +96,14 @@ export function useDivination(promptType: string) {
         },
         onclose() {
           setStreaming(false)
+          if (promptType === 'tarot') {
+            const missingSections = findMissingTarotSections(tmpResultBuffer)
+            if (missingSections.length > 0) {
+              const warning = `\n\n---\n⚠️ 结构化校验提醒：缺少章节：${missingSections.join('、')}`
+              tmpResultBuffer += warning
+              setResult(md.render(tmpResultBuffer))
+            }
+          }
           // 保存历史记录（仅当有结果时）
           if (tmpResultBuffer && promptType) {
             const config = getDivinationOption(promptType)
