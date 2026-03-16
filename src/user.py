@@ -11,14 +11,16 @@ from src.models import User
 from fastapi import HTTPException
 
 _logger = logging.getLogger(__name__)
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 DEFAULT_TOKEN = ["xxx", "undefined"]
 
 
 def get_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
 ) -> Optional[User]:
     try:
+        if not credentials:
+            return
         jwt_token = credentials.credentials
         if not jwt_token or jwt_token in DEFAULT_TOKEN:
             return
