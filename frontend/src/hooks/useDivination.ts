@@ -13,6 +13,7 @@ const md = new MarkdownIt()
 export function useDivination(promptType: string) {
   const { jwt, customOpenAISettings } = useGlobalState()
   const [result, setResult] = useState('')
+  const [rawResult, setRawResult] = useState('')
   const [loading, setLoading] = useState(false)
   const [resultLoading, setResultLoading] = useState(false)
   const [streaming, setStreaming] = useState(false)
@@ -24,6 +25,7 @@ export function useDivination(promptType: string) {
       setResultLoading(true)
       setStreaming(false)
       setResult('')
+      setRawResult('')
       setShowDrawer(true)
 
       let tmpResultBuffer = ''
@@ -82,6 +84,7 @@ export function useDivination(promptType: string) {
           try {
             const newContent = JSON.parse(msg.data)
             tmpResultBuffer += newContent
+            setRawResult(tmpResultBuffer)
             setResult(md.render(tmpResultBuffer))
 
             // 收到第一个词立即结束加载状态
@@ -101,6 +104,7 @@ export function useDivination(promptType: string) {
             if (missingSections.length > 0) {
               const warning = `\n\n---\n⚠️ 结构化校验提醒：缺少章节：${missingSections.join('、')}`
               tmpResultBuffer += warning
+              setRawResult(tmpResultBuffer)
               setResult(md.render(tmpResultBuffer))
             }
           }
@@ -136,6 +140,7 @@ export function useDivination(promptType: string) {
 
   return {
     result,
+    rawResult,
     loading,
     resultLoading,
     streaming,

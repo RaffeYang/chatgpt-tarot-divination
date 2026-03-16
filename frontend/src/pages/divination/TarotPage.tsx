@@ -17,7 +17,7 @@ const TAROT_PRESETS = [
 
 export default function TarotPage() {
   const [prompt, setPrompt] = useLocalStorage('prompt', '')
-  const { result, loading, resultLoading, streaming, showDrawer, setShowDrawer, onSubmit } =
+  const { result, rawResult, loading, resultLoading, streaming, showDrawer, setShowDrawer, onSubmit } =
     useDivination('tarot')
 
   const handleSubmit = () => {
@@ -98,8 +98,10 @@ export default function TarotPage() {
         show={showDrawer}
         onClose={() => setShowDrawer(false)}
         result={result}
+        rawResult={rawResult}
         loading={resultLoading}
         streaming={streaming}
+        divinationType="tarot"
       />
     </DivinationCardHeader>
   )

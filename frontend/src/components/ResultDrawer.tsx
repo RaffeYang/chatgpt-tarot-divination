@@ -2,16 +2,27 @@ import { Button } from '@/components/ui/button'
 import { Sparkles, X } from 'lucide-react'
 import { useRef, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { parseTarotStructuredReport } from '@/utils/tarotReportParser'
 
 interface ResultDrawerProps {
   show: boolean
   onClose: () => void
   result: string
+  rawResult?: string
   loading: boolean
   streaming: boolean
+  divinationType?: string
 }
 
-export function ResultDrawer({ show, onClose, result, loading, streaming }: ResultDrawerProps) {
+export function ResultDrawer({
+  show,
+  onClose,
+  result,
+  rawResult = '',
+  loading,
+  streaming,
+  divinationType,
+}: ResultDrawerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [isAnimating, setIsAnimating] = useState(false)
 
@@ -40,6 +51,8 @@ export function ResultDrawer({ show, onClose, result, loading, streaming }: Resu
   }, [result])
 
   if (!show) return null
+
+  const tarotStructured = divinationType === 'tarot' ? parseTarotStructuredReport(rawResult) : null
 
   const drawerContent = (
     <div className="fixed inset-0 z-50 animate-in fade-in duration-200">
@@ -90,6 +103,39 @@ export function ResultDrawer({ show, onClose, result, loading, streaming }: Resu
             </div>
           ) : result ? (
             <div className={streaming ? 'streaming-content' : 'animate-in fade-in duration-300'}>
+              {divinationType === 'tarot' && tarotStructured && tarotStructured.cards.length > 0 && (
+                <div className="mb-5 space-y-3 rounded-xl border border-primary/20 bg-card/60 p-3 md:p-4">
+                  <div className="text-sm font-semibold text-primary">塔罗结构化摘要</div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    {tarotStructured.cards.map((card) => (
+                      <div key={card.position} className="rounded-lg border border-border bg-background/60 p-2">
+                        <div className="text-xs text-muted-foreground">{card.position}</div>
+                        <div className="text-sm mt-1">{card.content}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {tarotStructured.actions.length > 0 && (
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-1">行动建议</div>
+                      <ul className="list-disc pl-5 space-y-1">
+                        {tarotStructured.actions.map((item, idx) => (
+                          <li key={`${item}-${idx}`} className="text-sm">{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {tarotStructured.risks.length > 0 && (
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-1">风险提示</div>
+                      <ul className="list-disc pl-5 space-y-1">
+                        {tarotStructured.risks.map((item, idx) => (
+                          <li key={`${item}-${idx}`} className="text-sm">{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
               <div
                 className="prose prose-xs md:prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground/90 prose-strong:text-foreground prose-ul:text-foreground/90 prose-ol:text-foreground/90"
                 dangerouslySetInnerHTML={{ __html: result }}
