@@ -62,8 +62,9 @@ services:
     container_name: chatgpt-tarot-divination
     restart: always
     ports:
-      - 8000:8000
+      - 18080:18080
     environment:
+      - PORT=18080                      # 可选：服务端口（默认 18080）
       - api_key=sk-xxx                    # 必填：OpenAI API Key
       # - api_base=https://api.openai.com/v1  # 可选：API 地址
       # - model=gpt-3.5-turbo              # 可选：模型名称
@@ -82,7 +83,7 @@ services:
 docker-compose up -d
 ```
 
-访问 `http://localhost:8000` 即可使用。
+访问 `http://localhost:18080` 即可使用。
 
 ### 方式四：本地运行（开发者）
 
@@ -102,6 +103,7 @@ github_client_id=xxx                     # 可选：GitHub OAuth
 github_client_secret=xxx                 # 可选：GitHub OAuth
 ad_client=ca-pub-xxx                     # 可选：广告客户端
 ad_slot=123                              # 可选：广告位
+PORT=18080                               # 可选：服务端口（默认 18080）
 ```
 
 2. **构建前端**：
@@ -128,7 +130,7 @@ python3 -m venv ./venv
 ./venv/bin/python3 main.py
 ```
 
-5. **访问应用** - 打开浏览器访问 `http://localhost:8000`
+5. **访问应用** - 打开浏览器访问 `http://localhost:18080`
 
 ---
 

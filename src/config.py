@@ -11,6 +11,8 @@ class Settings(BaseSettings):
 
     # project settings
     project_name: str = "ai-divination"
+    host: str = Field(default="0.0.0.0", validation_alias=AliasChoices("host", "HOST"))
+    port: int = Field(default=18080, validation_alias=AliasChoices("port", "PORT"))
 
     # OpenAI API settings
     api_key: str = Field(
