@@ -31,12 +31,16 @@ class TarotQualityTest(unittest.TestCase):
             "二、抽牌结果\n"
             "三、逐牌专业解读\n"
             "五、行动建议\n"
+            "风险预警：...\n"
+            "六、结论摘要\n"
         )
         self.assertEqual(find_missing_tarot_sections(complete_report), [])
 
         missing = find_missing_tarot_sections("一、问题聚焦\n二、抽牌结果\n")
         self.assertIn("逐牌专业解读", missing)
         self.assertIn("行动建议", missing)
+        self.assertIn("风险预警", missing)
+        self.assertIn("结论摘要", missing)
 
 
 if __name__ == "__main__":

@@ -8,6 +8,12 @@ import { getDivinationOption } from '@/config/constants'
 import { Sparkles, Eye, Loader2 } from 'lucide-react'
 
 const CONFIG = getDivinationOption('tarot')!
+const TAROT_PRESETS = [
+  '我最近换工作是否合适？',
+  '这段关系未来三个月会如何发展？',
+  '我该如何改善当前财务压力？',
+  '我现在最该优先解决的问题是什么？',
+]
 
 export default function TarotPage() {
   const [prompt, setPrompt] = useLocalStorage('prompt', '')
@@ -41,6 +47,20 @@ export default function TarotPage() {
             <p className="text-xs text-muted-foreground mt-2">
               请输入您想要占卜的问题（最多200字）
             </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {TAROT_PRESETS.map((item) => (
+              <Button
+                key={item}
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setPrompt(item)}
+                className="text-xs"
+              >
+                {item}
+              </Button>
+            ))}
           </div>
         </div>
 
