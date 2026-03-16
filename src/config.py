@@ -1,7 +1,7 @@
 import logging
 from typing import Tuple
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings
 
 _logger = logging.getLogger(__name__)
@@ -13,9 +13,19 @@ class Settings(BaseSettings):
     project_name: str = "ai-divination"
 
     # OpenAI API settings
-    api_key: str = Field(default="", exclude=True)
-    api_base: str = "https://api.openai.com/v1"
-    model: str = "gpt-3.5-turbo"
+    api_key: str = Field(
+        default="",
+        exclude=True,
+        validation_alias=AliasChoices("api_key", "API_KEY", "ANTHROPIC_API_KEY")
+    )
+    api_base: str = Field(
+        default="https://api.openai.com/v1",
+        validation_alias=AliasChoices("api_base", "API_BASE", "ANTHROPIC_BASE_URL")
+    )
+    model: str = Field(
+        default="gpt-3.5-turbo",
+        validation_alias=AliasChoices("model", "MODEL")
+    )
 
     # github oauth login settings
     github_client_id: str = ""
