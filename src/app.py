@@ -27,7 +27,12 @@ app.include_router(user_router)
 
 if os.path.exists("dist"):
     @app.get("/")
+    @app.get("/about")
+    @app.get("/settings")
+    @app.get("/login")
     @app.get("/login/{path}")
+    @app.get("/divination/{path}")
+    @app.get("/history/{path}")
     async def read_index(request: Request):
         _logger.info(f"Request from {get_real_ipaddr(request)}")
         return FileResponse(
@@ -35,12 +40,13 @@ if os.path.exists("dist"):
             headers={"Cache-Control": "no-cache"}
         )
 
-    app.mount("/", StaticFiles(directory="dist"), name="static")
-
 
 @app.get("/health")
 async def health():
     return "ok"
+
+if os.path.exists("dist"):
+    app.mount("/", StaticFiles(directory="dist"), name="static")
 
 
 @app.exception_handler(Exception)
