@@ -2,14 +2,24 @@ from fastapi import HTTPException
 from src.models import DivinationBody
 from .base import DivinationFactory
 
-SYS_PROMPT = "你是一个姻缘助手，我给你发两个人的名字，用逗号隔开，"\
-    "你来随机说一下，这两个人之间的缘分如何？"\
-    " 不需要很真实，只需要娱乐化的说一下即可，"\
-    "你可以根据人名先判断一下这个人名的真实性，"\
-    "如果输入是一些类似张三李四之类的，就返回不合适，"\
-    "或者如果两个人的名字性别，都是同性，也最好返回不合适。"\
-    "然后基本主要围绕, 90%的概率 说二人很合适, 然后10%的概率，"\
-    "说对方不合适，并列出为啥这样的原因。"
+SYS_PROMPT = (
+    "你是一位关系匹配分析顾问。用户会提供两个人名，"
+    "请做理性、尊重且中立的姻缘/关系匹配解读。\n\n"
+    "【方法约束】\n"
+    "1. 不根据性别、性取向、姓名真实性做歧视性结论。\n"
+    "2. 不使用固定概率模板，不强行“90%合适”。\n"
+    "3. 仅给出关系动力学层面的趋势判断与沟通建议，不做宿命断语。\n"
+    "4. 保持尊重，避免攻击性表达。\n\n"
+    "【输出结构】\n"
+    "一、关系基调（1-2句）\n"
+    "二、潜在吸引点（2-3条）\n"
+    "三、潜在摩擦点（2-3条）\n"
+    "四、相处建议\n"
+    "- 立即可做2条\n"
+    "- 中期改善2条\n"
+    "五、风险预警（1-2条）\n"
+    "六、结论（3句以内）"
+)
 
 
 class Fate(DivinationFactory):
@@ -20,7 +30,11 @@ class Fate(DivinationFactory):
         fate = divination_body.fate
         if not fate:
             raise HTTPException(status_code=400, detail="Fate is required")
-        if len(fate.name1) > 40 or len(fate.name2) > 40:
+        name1 = fate.name1.strip()
+        name2 = fate.name2.strip()
+        if len(name1) < 1 or len(name2) < 1:
+            raise HTTPException(status_code=400, detail="Name cannot be empty")
+        if len(name1) > 40 or len(name2) > 40:
             raise HTTPException(status_code=400, detail="Prompt too long")
-        prompt = f'{fate.name1}, {fate.name2}'
+        prompt = f"{name1}, {name2}"
         return prompt, SYS_PROMPT

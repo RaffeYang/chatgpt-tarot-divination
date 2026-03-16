@@ -83,8 +83,8 @@ async def divination(
     try:
         openai_stream = await api_client.chat.completions.create(
             model=api_model,
-            max_tokens=1000,
-            temperature=0.9,
+            max_tokens=1400,
+            temperature=0.6,
             top_p=1,
             stream=True,
             messages=[
