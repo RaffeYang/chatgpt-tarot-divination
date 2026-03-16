@@ -11,6 +11,8 @@ export interface TarotStructuredReport {
   cards: TarotCardItem[]
   actions: string[]
   risks: string[]
+  tendency?: string
+  confidence?: number
 }
 
 const CARD_PATTERNS: Array<{ position: TarotCardItem['position']; regex: RegExp }> = [
@@ -49,5 +51,12 @@ export function parseTarotStructuredReport(text: string): TarotStructuredReport 
     .slice(0, 3)
     .map((line) => line.replace(/^[-*]\s*/, ''))
 
-  return { cards, actions, risks }
+  const tendencyLine = lines.find((line) => /(倾向判断|更适合行动|更适合观察)/.test(line))
+  const tendency = tendencyLine?.replace(/^[-*]\s*/, '')
+
+  const confidenceLine = lines.find((line) => /置信度/.test(line))
+  const confidenceMatch = confidenceLine?.match(/([0-9]{1,3})/)
+  const confidence = confidenceMatch ? Math.min(100, Number(confidenceMatch[1])) : undefined
+
+  return { cards, actions, risks, tendency, confidence }
 }

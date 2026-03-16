@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button'
 import { Sparkles, X } from 'lucide-react'
 import { useRef, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { parseTarotStructuredReport } from '@/utils/tarotReportParser'
+import { parseTarotStructuredReport, type TarotCardItem } from '@/utils/tarotReportParser'
 
 interface ResultDrawerProps {
   show: boolean
@@ -56,6 +56,11 @@ export function ResultDrawer({
   const invalidTarotCards = tarotStructured
     ? tarotStructured.cards.filter((card) => !card.isValidName)
     : []
+  const tarotCardByPosition: Record<TarotCardItem['position'], TarotCardItem | undefined> = {
+    过去位: tarotStructured?.cards.find((card) => card.position === '过去位'),
+    现在位: tarotStructured?.cards.find((card) => card.position === '现在位'),
+    未来位: tarotStructured?.cards.find((card) => card.position === '未来位'),
+  }
 
   const drawerContent = (
     <div className="fixed inset-0 z-50 animate-in fade-in duration-200">
@@ -110,24 +115,42 @@ export function ResultDrawer({
                 <div className="mb-5 space-y-3 rounded-xl border border-primary/20 bg-card/60 p-3 md:p-4">
                   <div className="text-sm font-semibold text-primary">塔罗结构化摘要</div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    {tarotStructured.cards.map((card) => (
-                      <div key={card.position} className="rounded-lg border border-border bg-background/60 p-2">
-                        <div className="text-xs text-muted-foreground flex items-center justify-between">
-                          <span>{card.position}</span>
-                          <span
-                            className={`px-1.5 py-0.5 rounded text-[10px] ${
-                              card.isValidName
-                                ? 'bg-emerald-500/15 text-emerald-600'
-                                : 'bg-amber-500/15 text-amber-600'
-                            }`}
-                          >
-                            {card.isValidName ? 'RWS' : '待核验'}
-                          </span>
+                    {(['过去位', '现在位', '未来位'] as const).map((position) => {
+                      const card = tarotCardByPosition[position]
+                      return (
+                        <div key={position} className="rounded-lg border border-border bg-background/60 p-2">
+                          <div className="text-xs text-muted-foreground flex items-center justify-between">
+                            <span>{position}</span>
+                            <span
+                              className={`px-1.5 py-0.5 rounded text-[10px] ${
+                                !card
+                                  ? 'bg-slate-500/15 text-slate-600'
+                                  : card.isValidName
+                                    ? 'bg-emerald-500/15 text-emerald-600'
+                                    : 'bg-amber-500/15 text-amber-600'
+                              }`}
+                            >
+                              {!card ? '缺失' : card.isValidName ? 'RWS' : '待核验'}
+                            </span>
+                          </div>
+                          <div className="text-sm mt-1">
+                            {card?.content || '未提取到该位置牌面，请查看下方全文。'}
+                          </div>
                         </div>
-                        <div className="text-sm mt-1">{card.content}</div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
+                  {(tarotStructured.tendency || tarotStructured.confidence !== undefined) && (
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-2">
+                      <div className="text-xs text-muted-foreground mb-1">决策信号</div>
+                      {tarotStructured.tendency && (
+                        <div className="text-sm">{tarotStructured.tendency}</div>
+                      )}
+                      {tarotStructured.confidence !== undefined && (
+                        <div className="text-sm mt-1">置信度：{tarotStructured.confidence}%</div>
+                      )}
+                    </div>
+                  )}
                   {invalidTarotCards.length > 0 && (
                     <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 p-2">
                       <div className="text-xs text-amber-700 font-medium">牌名校验提醒</div>
