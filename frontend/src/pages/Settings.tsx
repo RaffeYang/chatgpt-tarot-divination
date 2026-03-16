@@ -111,9 +111,12 @@ export default function SettingsPage() {
               onChange={(e) =>
                 setTempSettings({ ...tempSettings, baseUrl: e.target.value })
               }
-              placeholder="https://api.openai.com"
+              placeholder="https://api.openai.com/v1"
               className="h-11"
             />
+            <p className="text-xs text-muted-foreground">
+              建议填写 OpenAI 兼容地址，通常以 <code>/v1</code> 结尾。
+            </p>
           </div>
 
           <div className="space-y-2 md:space-y-3">

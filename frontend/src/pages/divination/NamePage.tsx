@@ -33,10 +33,10 @@ export default function NamePage() {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="请输入姓名"
-            maxLength={10}
+            maxLength={20}
           />
           <p className="text-xs text-muted-foreground mt-2">
-            请输入完整姓名（最多10字）
+            请输入完整姓名（最多20字）
           </p>
         </div>
 

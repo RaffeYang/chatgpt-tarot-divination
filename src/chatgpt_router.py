@@ -16,7 +16,19 @@ from src.user import get_user
 from src.limiter import get_real_ipaddr, check_rate_limit
 from src.divination import DivinationFactory
 
-client = AsyncOpenAI(api_key=settings.api_key, base_url=settings.api_base)
+
+def _normalize_base_url(base_url: str) -> str:
+    normalized = base_url.strip().rstrip("/")
+    if not normalized:
+        return normalized
+    if normalized.endswith("/v1"):
+        return normalized
+    if any(k in normalized for k in ["openai.com", "anthropic", "minimaxi", "moonshot", "deepseek"]):
+        return f"{normalized}/v1"
+    return normalized
+
+
+client = AsyncOpenAI(api_key=settings.api_key, base_url=_normalize_base_url(settings.api_base))
 router = APIRouter()
 _logger = logging.getLogger(__name__)
 STOP_WORDS = [
@@ -67,14 +79,20 @@ async def divination(
     custom_base_url = request.headers.get("x-api-url")
     custom_api_key = request.headers.get("x-api-key")
     custom_api_model = request.headers.get("x-api-model")
+    normalized_custom_base_url = _normalize_base_url(custom_base_url) if custom_base_url else None
     api_client = client
     api_model = custom_api_model if custom_api_model else settings.model
-    if custom_base_url and custom_api_key:
-        api_client = AsyncOpenAI(api_key=custom_api_key, base_url=custom_base_url)
+    if normalized_custom_base_url and custom_api_key:
+        api_client = AsyncOpenAI(api_key=custom_api_key, base_url=normalized_custom_base_url)
     elif custom_api_key:
-        api_client = AsyncOpenAI(api_key=custom_api_key, base_url=settings.api_base)
+        api_client = AsyncOpenAI(
+            api_key=custom_api_key,
+            base_url=_normalize_base_url(settings.api_base)
+        )
 
-    if not (settings.api_base or custom_base_url) or not (settings.api_key or custom_api_key):
+    if not (_normalize_base_url(settings.api_base) or normalized_custom_base_url) or not (
+        settings.api_key or custom_api_key
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="请设置 API KEY 和 API BASE URL"

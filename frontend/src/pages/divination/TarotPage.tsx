@@ -34,12 +34,12 @@ export default function TarotPage() {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="我的财务状况如何"
-              maxLength={40}
+              maxLength={200}
               rows={3}
               className="resize-none w-full"
             />
             <p className="text-xs text-muted-foreground mt-2">
-              请输入您想要占卜的问题（最多40字）
+              请输入您想要占卜的问题（最多200字）
             </p>
           </div>
         </div>

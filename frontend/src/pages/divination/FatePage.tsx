@@ -7,6 +7,7 @@ import { useDivination } from '@/hooks/useDivination'
 import { useLocalStorage } from '@/hooks'
 import { getDivinationOption } from '@/config/constants'
 import { Sparkles, Eye, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 const CONFIG = getDivinationOption('fate')!
 
@@ -19,6 +20,10 @@ export default function FatePage() {
     useDivination('fate')
 
   const handleSubmit = () => {
+    if (!fate.name1.trim() || !fate.name2.trim()) {
+      toast.error('请填写双方姓名')
+      return
+    }
     onSubmit({
       prompt: `${fate.name1} ${fate.name2}`,
       fate: fate,

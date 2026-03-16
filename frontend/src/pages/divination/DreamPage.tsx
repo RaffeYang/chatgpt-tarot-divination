@@ -33,12 +33,12 @@ export default function DreamPage() {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="请输入你的梦境"
-            maxLength={40}
+            maxLength={300}
             rows={3}
             className="resize-none"
           />
           <p className="text-xs text-muted-foreground mt-2">
-            请详细描述您的梦境（最多40字）
+            请详细描述您的梦境（最多300字）
           </p>
         </div>
 

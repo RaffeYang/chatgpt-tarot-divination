@@ -7,18 +7,23 @@ import { useDivination } from '@/hooks/useDivination'
 import { useLocalStorage } from '@/hooks'
 import { getDivinationOption } from '@/config/constants'
 import { Sparkles, Eye, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 const CONFIG = getDivinationOption('plum_flower')!
 
 export default function PlumFlowerPage() {
   const [plumFlower, setPlumFlower] = useLocalStorage('plum_flower', {
-    num1: 0,
-    num2: 0,
+    num1: 1,
+    num2: 1,
   })
   const { result, loading, resultLoading, streaming, showDrawer, setShowDrawer, onSubmit } =
     useDivination('plum_flower')
 
   const handleSubmit = () => {
+    if (plumFlower.num1 <= 0 || plumFlower.num2 <= 0) {
+      toast.error('请输入大于 0 的数字')
+      return
+    }
     onSubmit({
       prompt: `${plumFlower.num1} ${plumFlower.num2}`,
       plum_flower: plumFlower,
@@ -34,16 +39,16 @@ export default function PlumFlowerPage() {
     >
       <div className="max-w-2xl mx-auto">
         <div className="space-y-4">
-          <h4 className="font-medium">请随机输入两个 0-1000 的数字</h4>
+          <h4 className="font-medium">请随机输入两个 1-1000 的数字</h4>
           <div>
             <Label>数字一</Label>
             <Input
               type="number"
-              min={0}
+              min={1}
               max={1000}
               value={plumFlower.num1}
               onChange={(e) =>
-                setPlumFlower({ ...plumFlower, num1: parseInt(e.target.value) || 0 })
+                setPlumFlower({ ...plumFlower, num1: parseInt(e.target.value) || 1 })
               }
               className="mt-2"
             />
@@ -52,11 +57,11 @@ export default function PlumFlowerPage() {
             <Label>数字二</Label>
             <Input
               type="number"
-              min={0}
+              min={1}
               max={1000}
               value={plumFlower.num2}
               onChange={(e) =>
-                setPlumFlower({ ...plumFlower, num2: parseInt(e.target.value) || 0 })
+                setPlumFlower({ ...plumFlower, num2: parseInt(e.target.value) || 1 })
               }
               className="mt-2"
             />

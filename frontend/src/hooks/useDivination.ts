@@ -55,7 +55,19 @@ export function useDivination(promptType: string) {
             setStreaming(true)
             return
           } else if (response.status >= 400) {
-            throw new Error(`${response.status} ${await response.text()}`)
+            const bodyText = await response.text()
+            let message = `${response.status} ${bodyText}`
+            try {
+              const parsed = JSON.parse(bodyText)
+              if (parsed?.detail) {
+                message = parsed.detail
+              } else if (parsed?.error) {
+                message = parsed.error
+              }
+            } catch {
+              // keep raw message
+            }
+            throw new Error(message)
           }
         },
         onmessage(msg) {
