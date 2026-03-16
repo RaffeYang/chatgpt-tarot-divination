@@ -1,5 +1,9 @@
+import { extractTarotCardName, isValidTarotCardName } from '@/utils/tarotCardCatalog'
+
 export interface TarotCardItem {
   position: '过去位' | '现在位' | '未来位'
+  cardName: string
+  isValidName: boolean
   content: string
 }
 
@@ -24,7 +28,13 @@ export function parseTarotStructuredReport(text: string): TarotStructuredReport 
     if (found) {
       const matched = found.match(pattern.regex)
       if (matched?.[1]) {
-        cards.push({ position: pattern.position, content: matched[1] })
+        const cardName = extractTarotCardName(matched[1])
+        cards.push({
+          position: pattern.position,
+          content: matched[1],
+          cardName,
+          isValidName: isValidTarotCardName(cardName),
+        })
       }
     }
   }

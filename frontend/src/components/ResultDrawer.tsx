@@ -53,6 +53,9 @@ export function ResultDrawer({
   if (!show) return null
 
   const tarotStructured = divinationType === 'tarot' ? parseTarotStructuredReport(rawResult) : null
+  const invalidTarotCards = tarotStructured
+    ? tarotStructured.cards.filter((card) => !card.isValidName)
+    : []
 
   const drawerContent = (
     <div className="fixed inset-0 z-50 animate-in fade-in duration-200">
@@ -109,11 +112,31 @@ export function ResultDrawer({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                     {tarotStructured.cards.map((card) => (
                       <div key={card.position} className="rounded-lg border border-border bg-background/60 p-2">
-                        <div className="text-xs text-muted-foreground">{card.position}</div>
+                        <div className="text-xs text-muted-foreground flex items-center justify-between">
+                          <span>{card.position}</span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[10px] ${
+                              card.isValidName
+                                ? 'bg-emerald-500/15 text-emerald-600'
+                                : 'bg-amber-500/15 text-amber-600'
+                            }`}
+                          >
+                            {card.isValidName ? 'RWS' : '待核验'}
+                          </span>
+                        </div>
                         <div className="text-sm mt-1">{card.content}</div>
                       </div>
                     ))}
                   </div>
+                  {invalidTarotCards.length > 0 && (
+                    <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 p-2">
+                      <div className="text-xs text-amber-700 font-medium">牌名校验提醒</div>
+                      <div className="text-xs mt-1 text-amber-700/90">
+                        以下牌名不在标准 RWS 命名内，请人工复核：
+                        {invalidTarotCards.map((card) => card.cardName || card.position).join('、')}
+                      </div>
+                    </div>
+                  )}
                   {tarotStructured.actions.length > 0 && (
                     <div>
                       <div className="text-xs text-muted-foreground mb-1">行动建议</div>
