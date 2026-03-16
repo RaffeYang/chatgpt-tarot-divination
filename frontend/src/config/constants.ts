@@ -1,5 +1,6 @@
 import {
   Sparkles,
+  BrainCircuit,
   Heart,
   Calendar,
   Baby,
@@ -18,6 +19,13 @@ export interface DivinationOption {
 }
 
 export const DIVINATION_OPTIONS: DivinationOption[] = [
+  {
+    key: 'fortune',
+    label: 'AI算命',
+    title: 'AI综合算命',
+    description: '融合多种命理视角，给出结构化趋势分析与行动建议',
+    icon: BrainCircuit,
+  },
   {
     key: 'tarot',
     label: '塔罗牌',

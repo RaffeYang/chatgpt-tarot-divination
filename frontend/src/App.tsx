@@ -7,6 +7,7 @@ import AboutPage from '@/pages/About'
 import SettingsPage from '@/pages/Settings'
 import LoginPage from '@/pages/Login'
 import HistoryPage from '@/pages/History'
+import FortunePage from '@/pages/divination/FortunePage'
 import TarotPage from '@/pages/divination/TarotPage'
 import BirthdayPage from '@/pages/divination/BirthdayPage'
 import NewNamePage from '@/pages/divination/NewNamePage'
@@ -85,6 +86,7 @@ function App() {
           <Routes>
             <Route path="/" element={<MarketPage />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/divination/fortune" element={<FortunePage />} />
             <Route path="/divination/tarot" element={<TarotPage />} />
             <Route path="/divination/birthday" element={<BirthdayPage />} />
             <Route path="/divination/new_name" element={<NewNamePage />} />

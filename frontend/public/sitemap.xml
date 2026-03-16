@@ -10,6 +10,14 @@
 
   <!-- 塔罗牌占卜 -->
   <url>
+    <loc>https://divination.app.awsl.uk/divination/fortune</loc>
+    <lastmod>2026-03-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- 塔罗牌占卜 -->
+  <url>
     <loc>https://divination.app.awsl.uk/divination/tarot</loc>
     <lastmod>2025-12-20</lastmod>
     <changefreq>weekly</changefreq>
