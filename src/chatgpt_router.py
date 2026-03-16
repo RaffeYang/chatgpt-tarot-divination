@@ -1,4 +1,5 @@
 import json
+import datetime
 from typing import Optional
 from anthropic import AsyncAnthropic
 from fastapi.responses import StreamingResponse
@@ -52,6 +53,17 @@ STOP_WORDS = [
 ]
 
 
+def _build_runtime_system_prompt(base_system_prompt: str) -> str:
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    runtime_rule = (
+        f"【运行时上下文】当前系统时间为 {now}。\n"
+        "若用户问题涉及“近期/未来”时间判断，请以该时间为基准。\n"
+        "若用户信息不足（如缺少出生信息、对象背景、关键上下文），请明确写出“以下为基于有限信息的趋势分析”，"
+        "并避免把假设写成事实。"
+    )
+    return f"{runtime_rule}\n\n{base_system_prompt}"
+
+
 @router.post("/api/divination")
 async def divination(
         request: Request,
@@ -87,7 +99,8 @@ async def divination(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"No prompt type {divination_body.prompt_type} not supported"
         )
-    prompt, system_prompt = divination_obj.build_prompt(divination_body)
+    prompt, base_system_prompt = divination_obj.build_prompt(divination_body)
+    system_prompt = _build_runtime_system_prompt(base_system_prompt)
 
     # custom api key, model and base url support
     custom_base_url = request.headers.get("x-api-url")
